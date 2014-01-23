@@ -106,7 +106,7 @@ function game:enter(previous_state,level)
   
   -- graphic assets
   if level == "level_one" then
-    bg = love.graphics.newImage("assets/bg_level_one.jpg")
+    bg = love.graphics.newImage("assets/bg.png")
   else
     bg = love.graphics.newImage("assets/bg.png")
   end
@@ -115,6 +115,7 @@ function game:enter(previous_state,level)
   bacteria_anim:setMode("loop")
   virus_anim = newAnimation(virus_img, 32, 32, 0.5, 1)
   virus_anim:setMode("loop")
+  enemies_shots = {}
   
   current_level = level
   
@@ -192,6 +193,12 @@ function game:draw(dt)
       virus_anim:draw(v.x, v.y)
     end
   end
+  
+  love.graphics.setColor(255,255,255,255)
+  for i,v in ipairs(enemies_shots) do
+    love.graphics.rectangle("fill", v.x, v.y, 2, 5)
+  end
+  
   camera:detach()
   
   -- HUD

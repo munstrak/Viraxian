@@ -91,7 +91,7 @@ function hero.update(dt)
 end
 
 function shoot()
-  if #hero.shots >= 5 then return end
+  if #hero.shots >= HERO_SHOTS then return end
   local shot = {}
   shot.x = hero.x+hero.width/2
   shot.y = hero.y
