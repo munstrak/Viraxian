@@ -7,8 +7,12 @@ function create_enemy(enemytype, x, y)
   enemy.height = 64
   enemy.x = x
   enemy.y = y
+  enemy.swarmx = x
+  enemy.swarmy = y
+  enemy.velocity = 100
+  enemy.veldir = -1
   enemy.shots_number = BACTERIA_SHOTS
-  enemy.shooting_freq = 0.5 -- czas do pierwszego strzalu w sekundach
+  enemy.shooting_freq = 1 -- czas do pierwszego strzalu w sekundach
   if enemytype == "bacteria" then
     enemy.type = "bacteria"
     enemy.points = 30
@@ -35,10 +39,10 @@ function update_enemies(dt)
   
   for i,v in ipairs(enemies) do
     if v.x < enleftx then
-      enleftx = v.x
+      enleftx = v.swarmx
     end
     if v.x > enrightx then
-      enrightx = v.x
+      enrightx = v.swarmx
     end
   end
   
@@ -65,6 +69,14 @@ function update_enemies(dt)
     vector.y = v.swarmy - v.y
     vector.length = math.sqrt(vector.x*vector.x + vector.y*vector.y)
     
+    if v.velocity >= -300 and v.velocity <= 300 then
+      v.velocity = v.velocity + v.veldir*5
+    else
+      v.veldir = - v.veldir
+      v.velocity = v.velocity + v.veldir*5
+    end
+    
+    --print(i, " ", v.velocity)
     if v.y < v.swarmy and vector.length < 100*dt then
       v.x = v.swarmx
       v.y = v.swarmy
@@ -74,21 +86,28 @@ function update_enemies(dt)
       v.x = v.x + (vector.x/vector.length)*100*dt
       v.y = v.y + (vector.y/vector.length)*100*dt
       v.shots_number = BACTERIA_SHOTS  -- TO DO zmienna liczba strzalow w zaleznosci od przeciwnika
-    elseif v.y < SCREEN_HEIGHT - 170 then 
+    else --v.y < SCREEN_HEIGHT - 170 then 
       local herovector = {}
       herovector.x = hero.x - v.x
+      --if herovector.x >= 0 then
+      --  herovector.x = herovector.x - 50
+      --else
+      --  herovector.x = herovector.x + 50
+      --end
       herovector.y = hero.y - v.y
       herovector.length = math.sqrt(herovector.x*herovector.x + herovector.y*herovector.y)
-      v.x = v.x + (herovector.x/herovector.length)*100*dt
-      v.y = v.y + (herovector.y/herovector.length)*100*dt
-      if v.shooting_freq <= 0 then
+      --v.x = v.x + (herovector.x/herovector.length)*v.velocity*dt
+      --v.y = v.y + (herovector.y/herovector.length)*100*dt
+      v.x = v.x + v.flyvectorx*v.velocity*dt
+      v.y = v.y + v.flyvectory*100*dt
+      if v.shooting_freq <= 0 and v.y < SCREEN_HEIGHT - 300 then
         enemy_shoot(v)
         v.shooting_freq = love.math.random(KAMIKAZE_SHOT_FREQ_MIN,KAMIKAZE_SHOT_FREQ_MAX)
       else
         v.shooting_freq = v.shooting_freq - dt
       end
-    else
-      v.y = v.y + 100*dt
+    --else
+    --  v.y = v.y + 100*dt
     end
     if v.y > SCREEN_HEIGHT then
       v.x = v.swarmx
@@ -96,26 +115,14 @@ function update_enemies(dt)
     end
   end
   
-  for i,v in ipairs(enemies_shots) do
-    v.x = v.x + v.vectorx*300*dt
-    v.y = v.y + v.vectory*300*dt
-    if v.y < 0 then
-      table.insert(remEnemyShots,i)
-    end
-  end
-  
   -- check for hero hits
   for i,v in ipairs(enemies_shots) do
-    if CheckCollision(hero.x, hero.y, hero.width, hero.height, v.x, v.y, 2, 5) then
+    if CheckCollision(hero.x, hero.y, hero.width, hero.height, v.x, v.y, 2, 2) then
       table.insert(remEnemyShots, i)
       lives = lives - 1
     end
   end
-  
-  -- remove marked shots
-  for i,v in ipairs(remEnemyShots) do
-    table.remove(enemies_shots, i)
-  end
+
   
   --[[
   for i,v in ipairs(flying_enemies) do
@@ -130,6 +137,7 @@ function update_enemies(dt)
   if current_level ~= "level_one" then
     for i,v in ipairs(enemies) do
       v.x = v.x + dir*FORMATION_SPEED*dt
+      v.swarmx = v.swarmx + dir*FORMATION_SPEED*dt
     end
     
     for i,v in ipairs(flying_enemies) do
@@ -137,6 +145,18 @@ function update_enemies(dt)
     end  
   end
   
+  for i,v in ipairs(enemies_shots) do
+    v.x = v.x + v.vectorx*300*dt
+    v.y = v.y + v.vectory*300*dt
+    if v.y < 0 then
+      table.insert(remEnemyShots,i)
+    end
+  end
+    
+  -- remove marked shots
+  for i,v in ipairs(remEnemyShots) do
+    table.remove(enemies_shots, v)
+  end
 end
 
 function LaunchKamikaze()
@@ -166,6 +186,12 @@ function LaunchKamikaze()
         if i == border_enemies[chosen_enemy] then
           v.swarmx = v.x
           v.swarmy = v.y
+          local herovector = {}
+          herovector.x = hero.x - v.x + math.random(-50,50)
+          herovector.y = hero.y - v.y
+          herovector.length = math.sqrt(herovector.x*herovector.x + herovector.y*herovector.y)
+          v.flyvectorx = (herovector.x/herovector.length)
+          v.flyvectory = (herovector.y/herovector.length)
           table.insert(flying_enemies,v)
           table.remove(enemies,i)
         end
@@ -184,6 +210,7 @@ function enemy_shoot(enemy)
   herovector.length = math.sqrt(herovector.x*herovector.x + herovector.y*herovector.y)
   shot.vectorx = (herovector.x/herovector.length)
   shot.vectory = (herovector.y/herovector.length)
+  shot.enemyx = enemy.x
   enemy.shots_number = enemy.shots_number - 1
   table.insert(enemies_shots, shot)
 end

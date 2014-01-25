@@ -3,7 +3,7 @@ local hero = require "hero"
 Camera = require("camera")
 Timer = require "timer"
 
---require("mobdebug").start()
+-- require("mobdebug").start()
 
 require("AnAL") -- animations
 require("sick") -- highscore
@@ -128,6 +128,8 @@ function game:enter(previous_state,level)
     local load_level = level_one()
     camera = Camera(CAMERA_POS_X_L1,CAMERA_POS_Y_L1,CAMERA_ZOOM_L1)
   elseif level == "level_two" then
+    --score = 0 -- wywalic w ostatecznej wersji
+    --lives = 3 -- wywalic
     timeToLaunchKamikaze = FIRST_KAMIKAZE
     hero.load()
     level_two = love.filesystem.load("level_two.lua")
@@ -149,7 +151,7 @@ function game:update(dt)
     highestscore = score
   end
 
-  if lives == 0 then
+  if lives <= 0 then
     local message = "Game Over"
     Gamestate.switch(game_over, message)
   end
@@ -171,6 +173,8 @@ function game:draw(dt)
 
   camera:attach()
   -- HERO
+  love.graphics.setColor(255,255,255,255)
+  love.graphics.rectangle("line", hero.x, hero.y, hero.width, hero.height)
   love.graphics.draw(hero.avatar, hero.x, hero.y)
   love.graphics.setColor(255,255,255,255)
   for i,v in ipairs(hero.shots) do
@@ -196,7 +200,7 @@ function game:draw(dt)
   
   love.graphics.setColor(255,255,255,255)
   for i,v in ipairs(enemies_shots) do
-    love.graphics.rectangle("fill", v.x, v.y, 2, 5)
+    love.graphics.rectangle("fill", v.x, v.y, 2, 2)
   end
   
   camera:detach()

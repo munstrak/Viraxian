@@ -3,12 +3,12 @@ SCREEN_HEIGHT = love.graphics.getHeight()
 
 HERO_SPEED = 500
 FORMATION_SPEED = 20 -- poruszanie sie szyku zarazkow
-HERO_SHOTS = 5
+HERO_SHOTS = 1
 
 -- szybkosc poruszania sie zarazkow
 BACTERIA_SPEED = 50
 BACTERIA_SHOTS = 2
-BACTERIA_SHOT_RECOIL=100
+BACTERIA_SHOT_RECOIL=20
 
 VIRUS_SPEED = 70
 VIRUS_SHOTS = 3
